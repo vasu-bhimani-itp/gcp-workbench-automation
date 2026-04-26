@@ -1,0 +1,71 @@
+name: Teardown Vertex AI Workbench
+
+on:
+  workflow_dispatch:
+    inputs:
+      instance_name:
+        description: 'Notebook Name to Destroy (e.g., alpha-notebook)'
+        required: true
+        type: string
+
+jobs:
+  destroy:
+    name: Destroy Infrastructure
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider:  'projects/209427249385/locations/global/workloadIdentityPools/vaus-github-pool-tf/subject/gcp-workbench-automation'                         
+          service_account: 'vasu-github-actions@devops-sandbox-452616.iam.gserviceaccount.com'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Terraform Init (Secure User Context)
+        run: |
+          terraform init \
+            -backend-config="bucket=vasu_workbench_automation" \
+            -backend-config="prefix=state/users/${{ github.actor }}"
+
+      - name: Verify Ownership & Select Workspace
+        run: |
+          if terraform workspace select ${{ inputs.instance_name }}; then
+            echo "✅ Workspace located. Proceeding with destruction."
+          else
+            echo "❌ ERROR: You do not own a notebook named '${{ inputs.instance_name }}'."
+            echo "Access Denied or Instance Not Found."
+            exit 1
+          fi
+
+      - name: Terraform Destroy
+        run: |
+          terraform destroy -auto-approve \
+            -var="project_id=my-gcp-project" \
+            -var="region=us-central1" \
+            -var="vpc_network_id=projects/my-gcp-project/global/networks/ml-vpc" \
+            -var="subnet_id=projects/my-gcp-project/regions/us-central1/subnetworks/ml-private-subnet" \
+            -var="user_email=dummy@example.com" \
+            -var="instance_name=${{ inputs.instance_name }}" \
+            -var="machine_type=n1-standard-4" \
+            -var="github_username=${{ github.actor }}" \
+            -var="tf_runner_identity=serviceAccount:sa-tf-provisioner@my-gcp-project.iam.gserviceaccount.com"
+
+      - name: Cleanup Workspace
+        run: |
+          terraform workspace select default
+          terraform workspace delete ${{ inputs.instance_name }}
+
+      - name: Output Status
+        run: |
+          echo "✅ Teardown Complete!"
+          echo "Workbench '${{ inputs.instance_name }}' has been permanently deleted."

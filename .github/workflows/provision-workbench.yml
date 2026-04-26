@@ -1,0 +1,121 @@
+name: Provision Vertex AI Workbench
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_email:
+        description: 'Developer Email'
+        required: true
+        type: string
+      instance_name:
+        description: 'Notebook Name (Must be unique per user)'
+        required: true
+        type: string
+      region:
+        description: 'GCP Region'
+        required: true
+        type: choice
+        options:
+          - us-central1
+          - europe-west4
+          - asia-south1
+      machine_type:
+        description: 'Compute Size'
+        required: true
+        type: choice
+        options:
+          - n1-standard-4
+          - n1-standard-8
+          - a2-highgpu-1g
+      accelerator_type:
+        description: 'GPU Type (Requires Approval if not NONE)'
+        required: true
+        type: choice
+        options:
+          - NONE
+          - NVIDIA_TESLA_T4
+          - NVIDIA_TESLA_A100
+      accelerator_count:
+        description: 'Number of GPUs'
+        required: true
+        type: choice
+        options:
+          - "0"
+          - "1"
+          - "2"
+      boot_disk_size:
+        description: 'Boot Disk Size (GB)'
+        required: true
+        default: "100"
+        type: string
+      idle_timeout:
+        description: 'Auto-Shutdown Inactivity Period'
+        required: true
+        type: choice
+        options:
+          - "7200"  # 2 Hours
+          - "14400" # 4 Hours
+
+jobs:
+  provision:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    
+    # DYNAMIC ENVIRONMENT ROUTING: GATES GPU REQUESTS
+    environment: ${{ inputs.accelerator_type != 'NONE' && 'gpu-approval' || 'auto-approve' }}
+    
+    permissions:
+      id-token: write 
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider:  'projects/209427249385/locations/global/workloadIdentityPools/vaus-github-pool-tf/subject/gcp-workbench-automation'                         
+          service_account: 'vasu-github-actions@devops-sandbox-452616.iam.gserviceaccount.com'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Terraform Init (Dynamic User Folder)
+        run: |
+          terraform init \
+            -backend-config="bucket=vasu_workbench_automation" \
+            -backend-config="prefix=state/users/${{ github.actor }}"
+
+      - name: Terraform Workspace Management
+        run: |
+          terraform workspace select ${{ inputs.instance_name }} || terraform workspace new ${{ inputs.instance_name }}
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -out=tfplan \
+            -var="project_id=my-gcp-project" \
+            -var="region=${{ inputs.region }}" \
+            -var="vpc_network_id=projects/my-gcp-project/global/networks/ml-vpc" \
+            -var="subnet_id=projects/my-gcp-project/regions/${{ inputs.region }}/subnetworks/ml-private-subnet" \
+            -var="user_email=${{ inputs.user_email }}" \
+            -var="instance_name=${{ inputs.instance_name }}" \
+            -var="machine_type=${{ inputs.machine_type }}" \
+            -var="accelerator_type=${{ inputs.accelerator_type }}" \
+            -var="accelerator_count=${{ inputs.accelerator_count }}" \
+            -var="boot_disk_size=${{ inputs.boot_disk_size }}" \
+            -var="idle_timeout_seconds=${{ inputs.idle_timeout }}" \
+            -var="github_username=${{ github.actor }}" \
+            -var="tf_runner_identity=serviceAccount:sa-tf-provisioner@my-gcp-project.iam.gserviceaccount.com"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Output Connection Details
+        run: |
+          echo "Provisioning Complete!"
+          echo "User: ${{ inputs.user_email }}"
+          echo "Workspace: ${{ inputs.instance_name }}"
+          echo "Access your notebook at: https://console.cloud.google.com/vertex-ai/workbench"
