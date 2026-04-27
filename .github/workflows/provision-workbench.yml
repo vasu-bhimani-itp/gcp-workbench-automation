@@ -111,7 +111,8 @@ jobs:
         run: |
           terraform plan -out=tfplan \
             -var="project_id=devops-sandbox-452616" \
-            -var="region=${{ inputs.region }}" \
+            # -var="region=${{ inputs.region }}" \
+            -var="region=asia-south1" \
             -var="vpc_network_id=projects/devops-sandbox-452616/global/networks/vasu-workbench-automation" \
             -var="subnet_id=projects/devops-sandbox-452616/regions/${{ inputs.region }}/subnetworks/privatesubnet" \
             -var="user_email=${{ inputs.user_email }}" \
@@ -122,8 +123,8 @@ jobs:
             -var="boot_disk_size=${{ inputs.boot_disk_size }}" \
             -var="idle_timeout_seconds=${{ inputs.idle_timeout }}" \
             -var="github_username=${{ github.actor }}" \
-            -var="tf_runner_identity= ${{ secrets.SA_ACCOUNT_TERRAFORM }}" \
-            -var="admin_email= ${{ secrets.ADMIN_EMAIL }}"
+            -var="tf_runner_identity=serviceAccount:vasu-terraform-sa@devops-sandbox-452616.iam.gserviceaccount.com" \
+            -var="admin_email=${{ secrets.ADMIN_EMAIL }}"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
