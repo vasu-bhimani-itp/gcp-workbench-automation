@@ -49,3 +49,17 @@ variable "github_username" {
   description = "The GitHub username of the deployer"
   type        = string
 }
+
+
+variable "idle_timeout_seconds" {
+  description = "Idle timeout in seconds before the notebook shuts down"
+  type        = number
+}
+
+variable "boot_disk_size" { type = string }
+variable "accelerator_type" { type = string }
+variable "accelerator_count" { type = string }
+
+variable "admin_email" {
+  
+}

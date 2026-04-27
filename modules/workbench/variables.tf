@@ -53,3 +53,14 @@ variable "github_username" {
   description = "The GitHub username of the deployer"
   type        = string
 }
+
+variable "boot_disk_size" { 
+  type = string 
+}
+
+variable "accelerator_type" { type = string }
+variable "accelerator_count" { type = string }
+
+variable "gcp_service_account_email" {
+  
+}
