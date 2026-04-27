@@ -57,8 +57,4 @@ resource "google_workbench_instance" "notebook" {
       instance_id     = var.instance_name
     }
   )
-
-  # depends_on = [
-  #   google_service_account_iam_member.sa_user_binding
-  # ]
 }

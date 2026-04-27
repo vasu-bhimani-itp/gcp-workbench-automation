@@ -26,11 +26,11 @@ module "vertex_workbench" {
   }
 }
 
-module "Security_alert" {
+module "security_alert" {
   source = "./modules/logging"
   instance_name = var.instance_name
   admin_email = var.admin_email
-  user_email = var.instance_name
+  user_email = var.user_email
 }
 
 module "iam" {

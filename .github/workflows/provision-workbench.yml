@@ -75,18 +75,13 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider:  'projects/209427249385/locations/global/workloadIdentityPools/vaus-github-pool-tf/providers/vasu-ugsdiuasd'                         
-          service_account: 'vasu-github-actions@devops-sandbox-452616.iam.gserviceaccount.com'
+          workload_identity_provider:  vars.WORKLOAD_IDENTITY_PROVIDER
+          service_account: vars.SERVICE_ACCOUNT
           token_format: access_token
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      # - name: Authenticate to Google Cloud
-      #   uses: google-github-actions/auth@v1
-      #   with:
-      #     workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      #     service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - name: Debug GCP Identity
         run: |
           gcloud auth list
@@ -100,7 +95,7 @@ jobs:
       - name: Terraform Init (Dynamic User Folder)
         run: |
           terraform init \
-            -backend-config="bucket=vasu_workbench_automation" \
+            -backend-config="bucket=${{ vars.GCP_STATE_BUCKET }}" \
             -backend-config="prefix=state/users/${{ github.actor }}"
 
       - name: Terraform Workspace Management
@@ -110,10 +105,9 @@ jobs:
       - name: Terraform Plan
         run: |
           terraform plan -out=tfplan \
-            -var="project_id=devops-sandbox-452616" \
-            # -var="region=${{ inputs.region }}" \
-            -var="region=asia-south1" \
-            -var="vpc_network_id=projects/devops-sandbox-452616/global/networks/vasu-workbench-automation" \
+            -var="project_id=${{ vars.GCP_PROJECT_ID }}" \
+            -var="region=${{ inputs.region }}" \
+            -var="vpc_network_id=${{ vars.GCP_VPC_NETWORK_ID }}" \
             -var="subnet_id=projects/devops-sandbox-452616/regions/${{ inputs.region }}/subnetworks/privatesubnet" \
             -var="user_email=${{ inputs.user_email }}" \
             -var="instance_name=${{ inputs.instance_name }}" \
@@ -123,7 +117,7 @@ jobs:
             -var="boot_disk_size=${{ inputs.boot_disk_size }}" \
             -var="idle_timeout_seconds=${{ inputs.idle_timeout }}" \
             -var="github_username=${{ github.actor }}" \
-            -var="tf_runner_identity=serviceAccount:vasu-terraform-sa@devops-sandbox-452616.iam.gserviceaccount.com" \
+            -var="tf_runner_identity=${{ secrets.GCP_TERRAFORM_RUNNER_IDENTITY }}" \
             -var="admin_email=${{ secrets.ADMIN_EMAIL }}"
 
       - name: Terraform Apply

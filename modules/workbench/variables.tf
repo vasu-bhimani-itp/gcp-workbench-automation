@@ -54,13 +54,22 @@ variable "github_username" {
   type        = string
 }
 
-variable "boot_disk_size" { 
-  type = string 
+variable "boot_disk_size" {
+  description = "Boot disk size in GB for the notebook instance"
+  type        = string
 }
 
-variable "accelerator_type" { type = string }
-variable "accelerator_count" { type = string }
+variable "accelerator_type" {
+  description = "GPU accelerator type (e.g., NONE, NVIDIA_TESLA_T4, NVIDIA_TESLA_A100)"
+  type        = string
+}
+
+variable "accelerator_count" {
+  description = "Number of GPUs to attach"
+  type        = string
+}
 
 variable "gcp_service_account_email" {
-  
+  description = "Email of the service account for the workbench runtime"
+  type        = string
 }
