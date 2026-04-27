@@ -112,8 +112,8 @@ jobs:
           terraform plan -out=tfplan \
             -var="project_id=devops-sandbox-452616" \
             -var="region=${{ inputs.region }}" \
-            -var="vpc_network_id=projects/my-gcp-project/global/networks/ml-vpc" \
-            -var="subnet_id=projects/my-gcp-project/regions/${{ inputs.region }}/subnetworks/ml-private-subnet" \
+            -var="vpc_network_id=projects/devops-sandbox-452616/global/networks/vasu-workbench-automation" \
+            -var="subnet_id=projects/devops-sandbox-452616/regions/${{ inputs.region }}/subnetworks/privatesubnet" \
             -var="user_email=${{ inputs.user_email }}" \
             -var="instance_name=${{ inputs.instance_name }}" \
             -var="machine_type=${{ inputs.machine_type }}" \
