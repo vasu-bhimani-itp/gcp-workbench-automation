@@ -38,6 +38,7 @@ on:
       accelerator_count:
         description: 'Number of GPUs'
         required: true
+        default: "0"
         type: choice
         options:
           - "0"
@@ -129,3 +130,11 @@ jobs:
           echo "User: ${{ inputs.user_email }}"
           echo "Workspace: ${{ inputs.instance_name }}"
           echo "Access your notebook at: https://console.cloud.google.com/vertex-ai/workbench"
+
+      - name: Output Connection Details
+        run: |
+          PROXY_URL=$(terraform output -raw proxy_uri)
+          echo "Provisioning Complete!"
+          echo "User: ${{ inputs.user_email }}"
+          echo "Workspace: ${{ inputs.instance_name }}"
+          echo "Direct JupyterLab URL: https://$PROXY_URL"
