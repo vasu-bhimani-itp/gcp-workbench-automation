@@ -1,5 +1,5 @@
 locals {
-  notification_email = [ var.user_email , "vasu.bhimani@intuitive.ai"]
+  notification_email = [ var.user_email , var.admin_email ]
 }
 
 resource "google_monitoring_notification_channel" "email_alerts" {
