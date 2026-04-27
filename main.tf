@@ -1,6 +1,6 @@
 module "vertex_workbench" {
+  depends_on = [ module.iam ]
   source = "./modules/workbench"
-
   project_id         = var.project_id
   region             = var.region
   vpc_network_id     = var.vpc_network_id
@@ -34,6 +34,7 @@ module "security_alert" {
 }
 
 module "iam" {
+  
   source = "./modules/iam"
   tf_runner_identity = var.tf_runner_identity
   project_id = var.project_id
