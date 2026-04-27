@@ -110,7 +110,7 @@ jobs:
             -var="region=${{ inputs.region }}" \
             -var="vpc_network_id=${{ vars.GCP_VPC_NETWORK_ID }}" \
             -var="subnet_id=projects/devops-sandbox-452616/regions/${{ inputs.region }}/subnetworks/privatesubnet" \
-            -var="user_email=${{ inputs.user_email }}" \
+            -var="gcp_service_account_email=${{ inputs.user_email }}" \
             -var="instance_name=${{ inputs.instance_name }}" \
             -var="machine_type=${{ inputs.machine_type }}" \
             -var="accelerator_type=${{ inputs.accelerator_type }}" \
