@@ -46,7 +46,7 @@ on:
       boot_disk_size:
         description: 'Boot Disk Size (GB)'
         required: true
-        default: "100"
+        default: "150"
         type: string
       idle_timeout:
         description: 'Auto-Shutdown Inactivity Period'
@@ -114,8 +114,8 @@ jobs:
             -var="boot_disk_size=${{ inputs.boot_disk_size }}" \
             -var="idle_timeout_seconds=${{ inputs.idle_timeout }}" \
             -var="github_username=${{ github.actor }}" \
-            -var="tf_runner_identity= {{ secrets.SA_ACCOUNT_TERRAFORM }}" \
-            -var="admin_email= {{ secrets.ADMIN_EMAIL }}"
+            -var="tf_runner_identity= ${{ secrets.SA_ACCOUNT_TERRAFORM }}" \
+            -var="admin_email= ${{ secrets.ADMIN_EMAIL }}"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
