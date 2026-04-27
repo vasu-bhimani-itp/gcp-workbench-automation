@@ -77,6 +77,5 @@ variable "admin_email" {
 }
 
 variable "gcp_service_account_email" {
-  description = "Email of the service account for the workbench runtime"
-  type        = string
+
 }
