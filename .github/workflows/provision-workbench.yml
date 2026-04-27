@@ -73,10 +73,14 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider:  'projects/209427249385/locations/global/workloadIdentityPools/vaus-github-pool-tf/providers/vasu-ugsdiuasd'                         
           service_account: 'vasu-github-actions@devops-sandbox-452616.iam.gserviceaccount.com'
+          token_format: access_token
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
 
       # - name: Authenticate to Google Cloud
       #   uses: google-github-actions/auth@v1
