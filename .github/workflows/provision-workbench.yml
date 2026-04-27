@@ -3,7 +3,7 @@ name: Provision Vertex AI Workbench
 on:
   workflow_dispatch:
     inputs:
-      gcp_service_account_email:
+      user_email:
         description: 'Developer Email'
         required: true
         type: string
@@ -110,7 +110,7 @@ jobs:
             -var="region=${{ inputs.region }}" \
             -var="vpc_network_id=${{ vars.GCP_VPC_NETWORK_ID }}" \
             -var="subnet_id=projects/devops-sandbox-452616/regions/${{ inputs.region }}/subnetworks/privatesubnet" \
-            -var="gcp_service_account_email=${{ inputs.gcp_service_account_email }}" \
+            -var="user_email=${{ inputs.user_email }}" \
             -var="instance_name=${{ inputs.instance_name }}" \
             -var="machine_type=${{ inputs.machine_type }}" \
             -var="accelerator_type=${{ inputs.accelerator_type }}" \
@@ -127,7 +127,7 @@ jobs:
       - name: Output Connection Details
         run: |
           echo "Provisioning Complete!"
-          echo "User: ${{ inputs.gcp_service_account_email }}"
+          echo "User: ${{ inputs.user_email }}"
           echo "Workspace: ${{ inputs.instance_name }}"
           echo "Access your notebook at: https://console.cloud.google.com/vertex-ai/workbench"
 
@@ -135,6 +135,6 @@ jobs:
         run: |
           PROXY_URL=$(terraform output -raw proxy_uri)
           echo "Provisioning Complete!"
-          echo "User: ${{ inputs.gcp_service_account_email }}"
+          echo "User: ${{ inputs.user_email }}"
           echo "Workspace: ${{ inputs.instance_name }}"
           echo "Direct JupyterLab URL: https://$PROXY_URL"
