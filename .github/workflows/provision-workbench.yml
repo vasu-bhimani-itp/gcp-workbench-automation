@@ -75,7 +75,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          workload_identity_provider:  'projects/209427249385/locations/global/workloadIdentityPools/vaus-github-pool-tf/subject/gcp-workbench-automation'                         
+          workload_identity_provider:  'projects/209427249385/locations/global/workloadIdentityPools/vaus-github-pool-tf/providers/vasu-ugsdiuasd'                         
           service_account: 'vasu-github-actions@devops-sandbox-452616.iam.gserviceaccount.com'
 
       # - name: Authenticate to Google Cloud
