@@ -110,7 +110,7 @@ jobs:
       - name: Terraform Plan
         run: |
           terraform plan -out=tfplan \
-            -var="project_id=my-gcp-project" \
+            -var="project_id=devops-sandbox-452616" \
             -var="region=${{ inputs.region }}" \
             -var="vpc_network_id=projects/my-gcp-project/global/networks/ml-vpc" \
             -var="subnet_id=projects/my-gcp-project/regions/${{ inputs.region }}/subnetworks/ml-private-subnet" \
