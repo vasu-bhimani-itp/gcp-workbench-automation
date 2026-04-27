@@ -112,7 +112,7 @@ jobs:
         run: |
           terraform plan -out=tfplan \
             -var="project_id=devops-sandbox-452616" \
-            -var="region=asia-south1" \
+            -var="region=${{ inputs.region }}" \
             -var="vpc_network_id=projects/devops-sandbox-452616/global/networks/vasu-workbench-automation" \
             -var="subnet_id=projects/devops-sandbox-452616/regions/${{ inputs.region }}/subnetworks/privatesubnet" \
             -var="user_email=${{ inputs.user_email }}" \
