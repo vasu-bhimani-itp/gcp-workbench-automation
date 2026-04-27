@@ -124,17 +124,11 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      - name: Output Connection Details
-        run: |
-          echo "Provisioning Complete!"
-          echo "User: ${{ inputs.user_email }}"
-          echo "Workspace: ${{ inputs.instance_name }}"
-          echo "Access your notebook at: https://console.cloud.google.com/vertex-ai/workbench"
-
+     
       - name: Output Connection Details
         run: |
           PROXY_URL=$(terraform output -raw proxy_uri)
           echo "Provisioning Complete!"
           echo "User: ${{ inputs.user_email }}"
           echo "Workspace: ${{ inputs.instance_name }}"
-          echo "Direct JupyterLab URL: https://$PROXY_URL"
+          echo "Direct JupyterLab URL: $PROXY_URL"
