@@ -74,8 +74,6 @@ jobs:
             -var="github_username=${{ github.actor }}" \
             -var="tf_runner_identity=serviceAccount:vasu-terraform-sa@devops-sandbox-452616.iam.gserviceaccount.com" \
             -var="admin_email=admin@example.com"
-            -var="tf_runner_identity=serviceAccount:vasu-terraform-sa@devops-sandbox-452616.iam.gserviceaccount.com" \
-            -var="admin_email=admin@example.com"
 
       - name: Cleanup Workspace
         run: |
