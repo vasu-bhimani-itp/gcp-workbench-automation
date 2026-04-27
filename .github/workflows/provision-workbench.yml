@@ -114,7 +114,7 @@ jobs:
             -var="boot_disk_size=${{ inputs.boot_disk_size }}" \
             -var="idle_timeout_seconds=${{ inputs.idle_timeout }}" \
             -var="github_username=${{ github.actor }}" \
-            -var="tf_runner_identity=serviceAccount:sa-tf-provisioner@my-gcp-project.iam.gserviceaccount.com" \
+            -var="tf_runner_identity= {{ secrets.SA_ACCOUNT_TERRAFORM }}" \
             -var="admin_email= {{ secrets.ADMIN_EMAIL }}"
 
       - name: Terraform Apply
