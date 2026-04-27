@@ -75,7 +75,3 @@ variable "admin_email" {
   description = "Admin email for receiving alerts and notifications"
   type        = string
 }
-
-variable "gcp_service_account_email" {
-
-}
