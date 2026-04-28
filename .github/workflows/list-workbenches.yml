@@ -28,23 +28,24 @@ jobs:
 
       - name: Fetch Workbench Configurations and Add to Summary
         run: |
-          echo "### GCP Workbench Configurations for ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "### 🖥️ GCP Workbench Configurations for ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           
-          # Capture output to a temporary file
+          # Capture all project workbench data
           gcloud workbench instances list --location="-" --format="json" > workbench_data.json
 
-          # Extract data with updated logic for Idle Shutdown and State
+          # Process each matching notebook with fixed URL and Shutdown logic
           jq -r --arg ACTOR "${{ github.actor }}" '
             .[] | 
             select(.labels.github_username == $ACTOR) | 
-            "#### Instance: \(.name | split("/")[-1])",
+            "---",
+            "#### 📓 Instance: \(.name | split("/")[-1])",
             "| Property | Value |",
             "| --- | --- |",
             "| **Status** | \(.state) |",
-            "| **Connection URL** | \(if .proxyUri then "[Open JupyterLab](\(.proxyUri))" else " Instance must be RUNNING" end) |",
+            "| **Connection URL** | \(if .proxyUri and .state == "ACTIVE" then "[Open JupyterLab](\(.proxyUri | if startswith("http") then . else "https://" + . end))" else "⚠️ Instance must be ACTIVE to connect" end) |",
             "| **Owner Email** | \(.creator // "N/A") |",
             "| **Machine Type** | \(.gceSetup.machineType | split("/")[-1]) |",
             "| **Storage (Boot/Data)** | \(.gceSetup.bootDisk.diskSizeGb)GB / \(.gceSetup.dataDisks[0].diskSizeGb)GB |",
-            "| **Auto-Shutdown** | \(if .labels["idle-shutdown"] == "true" or .labels["idle_shutdown"] == "true" then " Enabled (120 min)" else " Enabled (\(.gceSetup.metadata["idle-timeout-minutes"] // .gceSetup.metadata["idle-timeout"] // "120")) minutes" end) |",
+            "| **Auto-Shutdown** | **\(.gceSetup.metadata["idle-timeout-minutes"] // .gceSetup.metadata["idle-timeout"] // .labels["idle-timeout-minutes"] // "120") minutes** |",
             "\n"
           ' workbench_data.json >> $GITHUB_STEP_SUMMARY
