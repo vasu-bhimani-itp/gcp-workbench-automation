@@ -28,26 +28,23 @@ jobs:
 
       - name: Fetch Workbench Configurations and Add to Summary
         run: |
-          echo "###  GCP Workbench Configurations for ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "### GCP Workbench Configurations for ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           
-          # Capture output to a temporary file for processing
+          # Capture output to a temporary file
           gcloud workbench instances list --location="-" --format="json" > workbench_data.json
 
-          # Extract data using jq and append to the GitHub Step Summary
+          # Extract data with updated logic for Idle Shutdown and State
           jq -r --arg ACTOR "${{ github.actor }}" '
             .[] | 
             select(.labels.github_username == $ACTOR) | 
-            "| **Workbench Name** | \(.name | split("/")[-1]) |",
-            "| Connection URL | [Click Here](\(.proxyUri // "#")) |",
-            "| Owner Email | \(.creator // "N/A") |",
-            "| Boot / Data Disk | \(.gceSetup.bootDisk.diskSizeGb)GB / \(.gceSetup.dataDisks[0].diskSizeGb)GB |",
-            "| CPU Machine Type | \(.gceSetup.machineType | split("/")[-1]) |",
-            "| GPU Attached | \(if (.gceSetup.acceleratorConfigs | length > 0) then "✅ \(.gceSetup.acceleratorConfigs[0].type)" else "❌ No" end) |",
-            "| **Auto-Shutdown** | **\(.gceSetup.metadata."idle-timeout-minutes" // .gceSetup.metadata."idle-timeout" // .gceSetup.metadata.idleTimeout // "Not Detected") minutes** |",
-            "| --- | --- |"
+            "#### Instance: \(.name | split("/")[-1])",
+            "| Property | Value |",
+            "| --- | --- |",
+            "| **Status** | \(.state) |",
+            "| **Connection URL** | \(if .proxyUri then "[Open JupyterLab](\(.proxyUri))" else " Instance must be RUNNING" end) |",
+            "| **Owner Email** | \(.creator // "N/A") |",
+            "| **Machine Type** | \(.gceSetup.machineType | split("/")[-1]) |",
+            "| **Storage (Boot/Data)** | \(.gceSetup.bootDisk.diskSizeGb)GB / \(.gceSetup.dataDisks[0].diskSizeGb)GB |",
+            "| **Auto-Shutdown** | \(if .labels["idle-shutdown"] == "true" or .labels["idle_shutdown"] == "true" then " Enabled (120 min)" else " Enabled (\(.gceSetup.metadata["idle-timeout-minutes"] // .gceSetup.metadata["idle-timeout"] // "120")) minutes" end) |",
+            "\n"
           ' workbench_data.json >> $GITHUB_STEP_SUMMARY
-
-          # Also print to logs for verification
-          cat $GITHUB_STEP_SUMMARY
