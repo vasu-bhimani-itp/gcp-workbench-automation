@@ -26,25 +26,28 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Fetch and Display Workbench Configurations
+      - name: Fetch Workbench Configurations and Add to Summary
         run: |
-          echo "Looking up Vertex AI Workbench configurations for GitHub Actor: ${{ github.actor }}"
-          echo "----------------------------------------------------------------------"
+          echo "###  GCP Workbench Configurations for ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
           
-          # Retrieves all workbench instances across all regions (-) in JSON format.
-          # jq filters by the 'github_username' label and maps the newer Vertex AI JSON structure.
-          gcloud workbench instances list --location="-" --format="json" | jq -r --arg ACTOR "${{ github.actor }}" '
+          # Capture output to a temporary file for processing
+          gcloud workbench instances list --location="-" --format="json" > workbench_data.json
+
+          # Extract data using jq and append to the GitHub Step Summary
+          jq -r --arg ACTOR "${{ github.actor }}" '
             .[] | 
             select(.labels.github_username == $ACTOR) | 
-            "Workbench Name            : \(.name | split("/")[-1])\n" +
-            "State                     : \(.state // "UNKNOWN")\n" +
-            "Connection URL            : \(.proxyUri // "Not Available (Start instance to see URL)")\n" +
-            "Owner Email ID            : \(.creator // "N/A")\n" +
-            "Storage (Boot Disk)       : \(.gceSetup.bootDisk.diskSizeGb // "0") GB\n" +
-            "Storage (Data Disk)       : \(.gceSetup.dataDisks[0].diskSizeGb // "0") GB\n" +
-            "CPU (Machine Type)        : \(.gceSetup.machineType | split("/")[-1])\n" +
-            "Auto-Shutdown Inactivity  : \(.gceSetup.metadata."idle-timeout" // .gceSetup.metadata.idleTimeout // "No Auto-shutdown configured")\n" +
-            "GPU Enabled               : \(if (.gceSetup.acceleratorConfigs | length > 0) then "Yes" else "No" end)\n" +
-            "GPU Type & Cores          : \(if (.gceSetup.acceleratorConfigs | length > 0) then .gceSetup.acceleratorConfigs[0].type + " (Cores: " + (.gceSetup.acceleratorConfigs[0].coreCount | tostring) + ")" else "N/A" end)\n" +
-            "----------------------------------------------------------------------"
-          '
+            "| **Workbench Name** | \(.name | split("/")[-1]) |",
+            "| Connection URL | [Click Here](\(.proxyUri // "#")) |",
+            "| Owner Email | \(.creator // "N/A") |",
+            "| Boot / Data Disk | \(.gceSetup.bootDisk.diskSizeGb)GB / \(.gceSetup.dataDisks[0].diskSizeGb)GB |",
+            "| CPU Machine Type | \(.gceSetup.machineType | split("/")[-1]) |",
+            "| GPU Attached | \(if (.gceSetup.acceleratorConfigs | length > 0) then "✅ \(.gceSetup.acceleratorConfigs[0].type)" else "❌ No" end) |",
+            "| **Auto-Shutdown** | **\(.gceSetup.metadata."idle-timeout-minutes" // .gceSetup.metadata."idle-timeout" // .gceSetup.metadata.idleTimeout // "Not Detected") minutes** |",
+            "| --- | --- |"
+          ' workbench_data.json >> $GITHUB_STEP_SUMMARY
+
+          # Also print to logs for verification
+          cat $GITHUB_STEP_SUMMARY
