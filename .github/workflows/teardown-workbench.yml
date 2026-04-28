@@ -20,12 +20,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider:  ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
-
+      
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -56,10 +59,6 @@ jobs:
             -var="region=asia-south1" \
             -var="vpc_network_id=projects/devops-sandbox-452616/global/networks/vasu-workbench-automation" \
             -var="subnet_id=projects/devops-sandbox-452616/regions/asia-south1/subnetworks/privatesubnet" \
-            -var="project_id=devops-sandbox-452616" \
-            -var="region=asia-south1" \
-            -var="vpc_network_id=projects/devops-sandbox-452616/global/networks/vasu-workbench-automation" \
-            -var="subnet_id=projects/devops-sandbox-452616/regions/asia-south1/subnetworks/privatesubnet" \
             -var="user_email=dummy@example.com" \
             -var="instance_name=${{ inputs.instance_name }}" \
             -var="machine_type=n1-standard-4" \
@@ -74,6 +73,19 @@ jobs:
             -var="github_username=${{ github.actor }}" \
             -var="tf_runner_identity=serviceAccount:vasu-terraform-sa@devops-sandbox-452616.iam.gserviceaccount.com" \
             -var="admin_email=admin@example.com"
+
+      - name: Delete Remote State File from GCS
+        run: |
+          STATE_PATH="gs://${{ vars.GCP_STATE_BUCKET }}/state/users/${{ github.actor }}/${{ inputs.instance_name }}.tfstate"
+
+          echo "Deleting state file: $STATE_PATH"
+
+          if gsutil ls "$STATE_PATH" > /dev/null 2>&1; then
+            gsutil rm "$STATE_PATH"
+            echo "State file deleted successfully."
+          else
+            echo "No state file found. Skipping."
+          fi
 
       - name: Cleanup Workspace
         run: |

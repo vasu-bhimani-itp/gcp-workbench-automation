@@ -70,6 +70,20 @@ jobs:
       contents: read
 
     steps:
+      - name: Check if Workspace Already Exists
+        run: |
+          STATE_PATH="gs://${{ vars.GCP_STATE_BUCKET }}/state/users/${{ github.actor }}/${{ inputs.instance_name }}.tfstate"
+
+          echo "Checking if workspace already exists: $STATE_PATH"
+
+          if gsutil ls "$STATE_PATH" > /dev/null 2>&1; then
+            echo "❌ ERROR: Workspace '${{ inputs.instance_name }}' already exists."
+            echo "Please choose a different instance_name."
+            exit 1
+          else
+            echo "✅ Workspace name is unique. Proceeding..."
+          fi
+
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -124,11 +138,10 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-     
-      - name: Output Connection Details
+      - name: Write Summary
         run: |
           PROXY_URL=$(terraform output -raw proxy_uri)
-          echo "Provisioning Complete!"
-          echo "User: ${{ inputs.user_email }}"
-          echo "Workspace: ${{ inputs.instance_name }}"
-          echo "Direct JupyterLab URL: $PROXY_URL"
+          echo "## Provisioning Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- **User:** ${{ inputs.user_email }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workspace:** ${{ inputs.instance_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **JupyterLab:** https://$PROXY_URL" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,45 @@
+name: List User Workbenches
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  list-configurations:
+    name: Get Workbench Configurations
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider:  ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Fetch and Display Notebook Configurations
+        run: |
+          echo "Looking up GCP Workbench configurations for GitHub Actor: ${{ github.actor }}"
+          echo "----------------------------------------------------------------------"
+          
+          # Retrieves all notebook instances across all regions (-) in JSON format.
+          # jq filters the output to only include instances where the 'creator' label matches the github.actor.
+          gcloud notebooks instances list --location="-" --format="json" | jq -r --arg ACTOR "${{ github.actor }}" '
+            .[] | 
+            select(.labels.creator == $ACTOR) | 
+            "Notebook Name             : \(.name | split("/")[-1])\n" +
+            "Connection URL            : \(.proxyUri // "Not Available")\n" +
+            "Owner Email ID            : \(.instanceOwners | join(", ") // "N/A")\n" +
+            "Storage (Boot Disk)       : \(.bootDisk.diskSizeGb // "0") GB\n" +
+            "Storage (Data Disk)       : \(.dataDisk.diskSizeGb // "0") GB\n" +
+            "CPU (Machine Type)        : \(.machineType | split("/")[-1])\n" +
+            "Auto-Shutdown Inactivity  : \(.metadata.idleTimeout // "No Auto-shutdown configured")\n" +
+            "GPU Enabled               : \(if .acceleratorConfig then "Yes" else "No" end)\n" +
+            "GPU Type & Cores          : \(if .acceleratorConfig then .acceleratorConfig.type + " (Cores: " + (.acceleratorConfig.coreCount | tostring) + ")" else "N/A" end)\n" +
+            "----------------------------------------------------------------------"
+          '
