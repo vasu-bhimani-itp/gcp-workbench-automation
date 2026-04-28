@@ -32,10 +32,10 @@ jobs:
           echo "----------------------------------------------------------------------"
           
           # Retrieves all notebook instances across all regions (-) in JSON format.
-          # jq filters the output to only include instances where the 'creator' label matches the github.actor.
+          # jq filters the output to only include instances where the 'github_username' label matches the github.actor.
           gcloud notebooks instances list --location="-" --format="json" | jq -r --arg ACTOR "${{ github.actor }}" '
             .[] | 
-            select(.labels.creator == $ACTOR) | 
+            select(.labels.github_username == $ACTOR) | 
             "Notebook Name             : \(.name | split("/")[-1])\n" +
             "Connection URL            : \(.proxyUri // "Not Available")\n" +
             "Owner Email ID            : \(.instanceOwners | join(", ") // "N/A")\n" +
