@@ -26,24 +26,25 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Fetch and Display Notebook Configurations
+      - name: Fetch and Display Workbench Configurations
         run: |
-          echo "Looking up GCP Workbench configurations for GitHub Actor: ${{ github.actor }}"
+          echo "Looking up Vertex AI Workbench configurations for GitHub Actor: ${{ github.actor }}"
           echo "----------------------------------------------------------------------"
           
-          # Retrieves all notebook instances across all regions (-) in JSON format.
-          # jq filters the output to only include instances where the 'github_username' label matches the github.actor.
-          gcloud notebooks instances list --location="-" --format="json" | jq -r --arg ACTOR "${{ github.actor }}" '
+          # Retrieves all workbench instances across all regions (-) in JSON format.
+          # jq filters by the 'github_username' label and maps the newer Vertex AI JSON structure.
+          gcloud workbench instances list --location="-" --format="json" | jq -r --arg ACTOR "${{ github.actor }}" '
             .[] | 
             select(.labels.github_username == $ACTOR) | 
-            "Notebook Name             : \(.name | split("/")[-1])\n" +
-            "Connection URL            : \(.proxyUri // "Not Available")\n" +
-            "Owner Email ID            : \(.instanceOwners | join(", ") // "N/A")\n" +
-            "Storage (Boot Disk)       : \(.bootDisk.diskSizeGb // "0") GB\n" +
-            "Storage (Data Disk)       : \(.dataDisk.diskSizeGb // "0") GB\n" +
-            "CPU (Machine Type)        : \(.machineType | split("/")[-1])\n" +
-            "Auto-Shutdown Inactivity  : \(.metadata.idleTimeout // "No Auto-shutdown configured")\n" +
-            "GPU Enabled               : \(if .acceleratorConfig then "Yes" else "No" end)\n" +
-            "GPU Type & Cores          : \(if .acceleratorConfig then .acceleratorConfig.type + " (Cores: " + (.acceleratorConfig.coreCount | tostring) + ")" else "N/A" end)\n" +
+            "Workbench Name            : \(.name | split("/")[-1])\n" +
+            "State                     : \(.state // "UNKNOWN")\n" +
+            "Connection URL            : \(.proxyUri // "Not Available (Start instance to see URL)")\n" +
+            "Owner Email ID            : \(.creator // "N/A")\n" +
+            "Storage (Boot Disk)       : \(.gceSetup.bootDisk.diskSizeGb // "0") GB\n" +
+            "Storage (Data Disk)       : \(.gceSetup.dataDisks[0].diskSizeGb // "0") GB\n" +
+            "CPU (Machine Type)        : \(.gceSetup.machineType | split("/")[-1])\n" +
+            "Auto-Shutdown Inactivity  : \(.gceSetup.metadata."idle-timeout" // .gceSetup.metadata.idleTimeout // "No Auto-shutdown configured")\n" +
+            "GPU Enabled               : \(if (.gceSetup.acceleratorConfigs | length > 0) then "Yes" else "No" end)\n" +
+            "GPU Type & Cores          : \(if (.gceSetup.acceleratorConfigs | length > 0) then .gceSetup.acceleratorConfigs[0].type + " (Cores: " + (.gceSetup.acceleratorConfigs[0].coreCount | tostring) + ")" else "N/A" end)\n" +
             "----------------------------------------------------------------------"
           '
