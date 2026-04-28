@@ -140,8 +140,9 @@ jobs:
 
       - name: Write Summary
         run: |
-          PROXY_URL=$(terraform output -raw proxy_uri)
+          PROXY_URL=$(terraform output -raw proxy_uri | tail -n 1)
+
           echo "## Provisioning Complete" >> $GITHUB_STEP_SUMMARY
-          echo "- **User:** ${{ inputs.user_email }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **User:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Workspace:** ${{ inputs.instance_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **JupyterLab:** https://$PROXY_URL" >> $GITHUB_STEP_SUMMARY
