@@ -5,11 +5,11 @@ A fully automated, GitOps-driven platform that allows developers to securely pro
 This project eliminates manual infrastructure provisioning, standardizes data science environments, and enforces strict IAM access controls and FinOps guardrails (e.g., auto-shutdown policies).
 
 ## Table of Contents
-- [Architecture & Design](#-architecture--design)
-- [Prerequisites](#-prerequisites)
-- [Setup Instructions](#-setup-instructions)
-- [Usage (Self-Service Workflows)](#-usage-self-service-workflows)
-- [Security & IAM](#-security--iam)
+- [Architecture & Design](#architecture--design)
+- [Prerequisites](#prerequisites)
+- [Setup Instructions](#setup-instructions)
+- [Usage (Self-Service Workflows)](#usage-self-service-workflows)
+- [Security & IAM](#security--iam)
 
 ## Architecture & Design
 This platform is designed to provide a secure, on-demand infrastructure pipeline while completely abstracting the underlying complexity from the end-user. 
