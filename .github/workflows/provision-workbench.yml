@@ -70,19 +70,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Check if Workspace Already Exists
-        run: |
-          STATE_PATH="gs://${{ vars.GCP_STATE_BUCKET }}/state/users/${{ github.actor }}/${{ inputs.instance_name }}.tfstate"
-
-          echo "Checking if workspace already exists: $STATE_PATH"
-
-          if gsutil ls "$STATE_PATH" > /dev/null 2>&1; then
-            echo "❌ ERROR: Workspace '${{ inputs.instance_name }}' already exists."
-            echo "Please choose a different instance_name."
-            exit 1
-          else
-            echo "✅ Workspace name is unique. Proceeding..."
-          fi
 
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -101,6 +88,16 @@ jobs:
         run: |
           gcloud auth list
           gcloud config list account
+
+      - name: Check if Workspace Already Exists
+        run: |
+          # Based on your image, the file is directly in the user folder
+          STATE_FILE="gs://${{ vars.GCP_STATE_BUCKET }}/state/users/${{ github.actor }}/${{ inputs.instance_name }}.tfstate"
+
+          if gsutil ls "$STATE_FILE" > /dev/null 2>&1; then
+            echo "ERROR: Notebook '${{ inputs.instance_name }}' already exists for this user."
+            exit 1
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -140,9 +137,15 @@ jobs:
 
       - name: Write Summary
         run: |
-          PROXY_URL=$(terraform output -raw proxy_uri | tail -n 1)
-
-          echo "## Provisioning Complete" >> $GITHUB_STEP_SUMMARY
-          echo "- **User:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Workspace:** ${{ inputs.instance_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **JupyterLab:** https://$PROXY_URL" >> $GITHUB_STEP_SUMMARY
+          # Use -raw to avoid quotes, and ensure we handle the protocol correctly
+          RAW_URL=$(terraform output -raw proxy_uri)
+          
+          # Force https and remove any double prefixes
+          CLEAN_URL=$(echo $RAW_URL | sed 's|^https://||')
+          
+          echo "## 🚀 Provisioning Complete" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **User** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Workspace** | ${{ inputs.instance_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **JupyterLab** | [Open Notebook](https://$CLEAN_URL) |" >> $GITHUB_STEP_SUMMARY
