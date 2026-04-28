@@ -4,14 +4,14 @@ on:
   workflow_dispatch: 
 
 jobs:
-  permissions:
-    id-token: write     
-    contents: read
-
   list-configurations:
     name: Get Workbench Configurations
     runs-on: ubuntu-latest
     
+    permissions:
+      id-token: write     
+      contents: read
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
